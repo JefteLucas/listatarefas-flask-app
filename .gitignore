@@ -1,0 +1,22 @@
+# Ambiente virtual
+venv/
+env/
+.env
+
+# Banco de dados (não suba o arquivo .db)
+*.db
+*.sqlite
+*.sqlite3
+
+# Cache do Python
+__pycache__/
+*.pyc
+*.pyo
+
+# Configurações do VS Code (pode subir, mas não é necessário)
+.vscode/
+*.code-workspace
+
+# Arquivos de sistema
+.DS_Store
+Thumbs.db
