@@ -33,7 +33,7 @@
             <div class="mb-3">
                 <label for="title" class="form-label fw-semibold">Título *</label>
                 <input type="text" class="form-control" id="title" name="title"
-                       value="{{ task.title if task else '' }}" required>
+                    value="{{ task.title if task else '' }}" required>
             </div>
 
             <!-- Campo Descrição -->
@@ -41,12 +41,22 @@
                 <label for="description" class="form-label fw-semibold">Descrição</label>
                 <textarea class="form-control" id="description" name="description" rows="3">{{ task.description if task else '' }}</textarea>
             </div>
+            
+            <!-- Campo Prioridade -->
+            <div class="mb-3">
+                <label for="priority" class="form-label fw-semibold">Prioridade</label>
+                <select class="form-select" name="priority" id="priority">
+                    <option value="Baixa" {% if task and task.priority == 'Baixa' %}selected{% endif %}>Baixa</option>
+                    <option value="Média" {% if task and task.priority == "Média" %}selected{% endif %}>Média</option>
+                    <option value="Alta" {% if task and task.priority == 'Alta' %}selected{% endif %}>Alta</option>
+                </select>
+            </div>
 
             <!-- Checkbox -->
             {% if task %}
                 <div class="mb-3 form-check">
                     <input type="checkbox" class="form-check-input" id="completed" name="completed"
-                           {% if task.completed %}checked{% endif %}>
+                        {% if task.completed %}checked{% endif %}>
                     <label class="form-check-label" for="completed">Marcar como concluída</label>
                 </div>
             {% endif %}

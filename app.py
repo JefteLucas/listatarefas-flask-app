@@ -69,6 +69,7 @@ class Task(db.Model):
     description = db.Column(db.Text, nullable=True)
     completed = db.Column(db.Boolean, default=False)
     created_at = db.Column(db.DateTime, default=db.func.current_timestamp())
+    priority = db.Column(db.String(20), default='Média')
 
     #Chave estrangeira, garante que toda tarefa tem um usuário
     user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
@@ -185,12 +186,13 @@ def new_task():
     if request.method == 'POST':
         title = request.form.get('title')
         description = request.form.get('description')
+        priority = request.form.get('priority')
 
         if not title:
             flash('O título é obrigatório', 'danger')
             return redirect(url_for('new_task'))
 
-        task = Task(title=title, description=description, user_id=current_user.id)
+        task = Task(title=title, description=description, priority=priority, user_id=current_user.id)
         db.session.add(task)
         db.session.commit()
 
@@ -213,6 +215,7 @@ def edit_task(task_id):
     if request.method == 'POST':
         task.title = request.form.get('title')
         task.description = request.form.get('description')
+        task.priority = request.form.get('priority')
         task.completed = True if request.form.get('completed') else False
 
         db.session.commit()
@@ -241,6 +244,7 @@ def delete_task(task_id):
 @app.route('/logout')
 @login_required
 def logout():
+    print("Rota logout acessada")
     flash('Você saiu', 'info')
     return redirect (url_for('login'))
 
