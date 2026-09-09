@@ -1,4 +1,4 @@
-# IMPORTAÇÕES
+# ======= IMPORTAÇÕES ========
 
 # Flask: framework web principal
 # render_template: renderiza arquivos HTML da pasta templates/
@@ -20,10 +20,15 @@ from werkzeug.security import generate_password_hash, check_password_hash
 # login_required: decorador que protege rotas exigindo login
 # current_user: objeto que representa o usuário logado (acessível em qualquer rota/template)
 from flask_login import  LoginManager, UserMixin, login_user, logout_user, login_required, current_user
+# os: módulo nativo do python para interagir com o sistema operacional
 import os 
+# dotenv: mantém privado os dados dentro do arquivo .env
 from dotenv import load_dotenv
+# flask_wtf e CSRFProtect: Proteção aos forms contra ataques e integra validação dos dados 
 from flask_wtf import CSRFProtect
+from datetime import timedelta
 
+# carregando o dotenv
 load_dotenv()
 
 # Configuração do app
@@ -31,11 +36,12 @@ app = Flask(__name__)
 
 # Chave secreta
 app.config['SECRET_KEY'] = os.environ.get('SECRET_KEY', 'dev-fallback-key')
+app.config['REMEMBER_COOKIE_DURATION'] = timedelta(days=14)
 
 # Defesa contra ataque CSRF
 csrf = CSRFProtect(app)
 
-# Configuração do banco de dados
+# ====== Configuração do banco de dados =======
 
 # Cria um arquivo .db na raiz do projeto
 app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///meu_banco.db'
@@ -51,7 +57,7 @@ app.config['TEMPLATES_AUTO_RELOAD'] = True
 db = SQLAlchemy(app)
 
 
-# Modelos de dados (Tabelas do banco)
+# ==== Modelos de dados (Tabelas do banco) =====
 
 # Estrutura do banco de dados que recebe dados do usuário cadastrado
 # Modelo que representa um usuário do sistema
@@ -103,18 +109,18 @@ def load_user(user_id):
     return db.session.get(User, int(user_id))
 
 
-#Criação das tabelas e do usuário admin
+# ======== Criação das tabelas e do usuário admin =========
 
 #Cria usuário admin
 with app.app_context():
     db.create_all()
     if not User.query.filter_by(email='admin@email.com').first():
         admin = User(email='admin@email.com', name= 'Administrador')
-        admin.set_password('123456')
+        admin.set_password('admin123')
         db.session.add(admin)
         db.session.commit()
 
-# Rotas públicas, acesso generalizado
+# ====== Rotas públicas, acesso generalizado =======
 
 # Rota para o index - Página inicial exibe o form de login
 @app.route('/')
@@ -126,7 +132,7 @@ def index():
 def register():
     if request.method == 'POST':
         name = request.form.get('name')
-        email = request.form.get('email')
+        email = request.form.get('email').lower().strip()
         password = request.form.get('password')
         confirm = request.form.get('confirm_password')
 
@@ -160,14 +166,14 @@ def register():
 @app.route('/login', methods=['GET', 'POST'])
 def login():
     if request.method == 'POST':
-        email = request.form.get('email')
+        email = request.form.get('email').lower().strip()
         password = request.form.get('password')
+        remember = True if request.form.get('remember') else False
         user = User.query.filter_by(email=email).first()
 
         # Verifica se o usuário existe e se a senha está correta
         if user and user.check_password(password):
             """ login_user(user) cria a sessão e mantém o user logado entre requisições"""
-            remember = True if request.form.get('remember') else False
             login_user(user, remember=remember)
             flash('Login realizado!', 'success')
             return redirect(url_for('dashboard'))
@@ -177,7 +183,7 @@ def login():
     return render_template('index.html')
 
 
-# Rotas protegidas com login_required (Exigem autenticação com @login_required)
+# ====== Rotas protegidas (Exigem autenticação com @login_required ======)
 
 # Painel pricipal do usuário
 @app.route('/dashboard')
