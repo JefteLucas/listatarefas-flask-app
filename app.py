@@ -100,7 +100,7 @@ login_manager.login_message = 'Por favor, faça login para acessar esta página.
 # Função obrigatória do flask-login, recebe o id do user e armazena na sessão retornando o objeto user
 @login_manager.user_loader
 def load_user(user_id):
-    return User.query.get(int(user_id))
+    return db.session.get(User, int(user_id))
 
 
 #Criação das tabelas e do usuário admin
@@ -232,7 +232,7 @@ def edit_task(task_id):
     return render_template('task_form.html', task=task)
 
 # Remove uma tarefa do banco de dados
-@app.route('/task/delete/<int:task_id>')
+@app.route('/task/delete/<int:task_id>', methods=['POST'])
 @login_required
 def delete_task(task_id):
     task = Task.query.get_or_404(task_id)
