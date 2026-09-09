@@ -20,13 +20,16 @@ from werkzeug.security import generate_password_hash, check_password_hash
 # login_required: decorador que protege rotas exigindo login
 # current_user: objeto que representa o usuário logado (acessível em qualquer rota/template)
 from flask_login import  LoginManager, UserMixin, login_user, logout_user, login_required, current_user
+import os 
+from dotenv import load_dotenv
+
+load_dotenv()
 
 # Configuração do app
-
 app = Flask(__name__)
-# Chave secreta
-app.config['SECRET_KEY'] = 'JUMA'
 
+# Chave secreta
+app.config['SECRET_KEY'] = os.environ.get('SECRET_KEY', 'dev-fallback-key')
 
 # Configuração do banco de dados
 
@@ -244,7 +247,6 @@ def delete_task(task_id):
 @app.route('/logout')
 @login_required
 def logout():
-    print("Rota logout acessada")
     flash('Você saiu', 'info')
     return redirect (url_for('login'))
 
