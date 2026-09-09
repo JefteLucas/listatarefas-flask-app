@@ -167,7 +167,8 @@ def login():
         # Verifica se o usuário existe e se a senha está correta
         if user and user.check_password(password):
             """ login_user(user) cria a sessão e mantém o user logado entre requisições"""
-            login_user(user)
+            remember = True if request.form.get('remember') else False
+            login_user(user, remember=remember)
             flash('Login realizado!', 'success')
             return redirect(url_for('dashboard'))
         else: 
