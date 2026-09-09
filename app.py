@@ -22,6 +22,7 @@ from werkzeug.security import generate_password_hash, check_password_hash
 from flask_login import  LoginManager, UserMixin, login_user, logout_user, login_required, current_user
 import os 
 from dotenv import load_dotenv
+from flask_wtf import CSRFProtect
 
 load_dotenv()
 
@@ -30,6 +31,9 @@ app = Flask(__name__)
 
 # Chave secreta
 app.config['SECRET_KEY'] = os.environ.get('SECRET_KEY', 'dev-fallback-key')
+
+# Defesa contra ataque CSRF
+csrf = CSRFProtect(app)
 
 # Configuração do banco de dados
 

@@ -29,6 +29,7 @@
         
         <!-- Formulário -->
         <form method="POST">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
             <!-- Campo Título -->
             <div class="mb-3">
                 <label for="title" class="form-label fw-semibold">Título *</label>
