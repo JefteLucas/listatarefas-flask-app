@@ -26,6 +26,7 @@ import os
 from dotenv import load_dotenv
 # flask_wtf e CSRFProtect: Proteção aos forms contra ataques e integra validação dos dados 
 from flask_wtf import CSRFProtect
+from flask_migrate import Migrate
 from datetime import timedelta
 
 # carregando o dotenv
@@ -36,6 +37,7 @@ app = Flask(__name__)
 
 # Chave secreta
 app.config['SECRET_KEY'] = os.environ.get('SECRET_KEY', 'dev-fallback-key')
+
 app.config['REMEMBER_COOKIE_DURATION'] = timedelta(days=14)
 
 # Defesa contra ataque CSRF
@@ -55,6 +57,7 @@ app.config['TEMPLATES_AUTO_RELOAD'] = True
 # Inicialização do banco de dados
 #Cria a instância do SQLAlchemy vinculada ao app flask
 db = SQLAlchemy(app)
+migrate = Migrate(app, db)
 
 
 # ==== Modelos de dados (Tabelas do banco) =====
@@ -113,7 +116,6 @@ def load_user(user_id):
 
 #Cria usuário admin
 with app.app_context():
-    db.create_all()
     if not User.query.filter_by(email='admin@email.com').first():
         admin = User(email='admin@email.com', name= 'Administrador')
         admin.set_password('admin123')
