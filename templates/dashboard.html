@@ -56,6 +56,16 @@
                             <small class="text-secondary">
                                 Criada em: {{ task.created_at.strftime('%d/%m/%Y %H:%M') }}
                             </small>
+                            {% if task.due_date %}
+                                <br>
+                                <small class="{% if not task.completed and task.due_date < today %}text-danger fw-bold{% else %}text-secondary{% endif %}">
+                                    Vencimento: {{ task.due_date.strftime('%d/%m/%Y') }}
+                                    {% if not task.completed and task.due_date < today %}
+                                        — Atrasada!
+                                    {% endif %}
+                                </small>
+                            {% endif %}
+                                
                         </div>
                         <div class="d-flex gap-2">
                             <!-- Botão Editar -->

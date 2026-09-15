@@ -53,6 +53,12 @@
                 </select>
             </div>
 
+            <div class="mb-3">
+                <label for="due_date" class="form-label fw-semibold">Data de vencimento</label>
+                <input type="date" class="form-control" id="due_date" name="due_date"
+                    value="{{ task.due_date.strftime('%Y-%m-%d') if task and task.due_date else '' }}">
+            </div>
+
             <!-- Checkbox -->
             {% if task %}
                 <div class="mb-3 form-check">

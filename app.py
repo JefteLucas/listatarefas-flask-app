@@ -27,7 +27,7 @@ from dotenv import load_dotenv
 # flask_wtf e CSRFProtect: Proteção aos forms contra ataques e integra validação dos dados 
 from flask_wtf import CSRFProtect
 from flask_migrate import Migrate
-from datetime import timedelta
+from datetime import timedelta, datetime, date
 
 # carregando o dotenv
 load_dotenv()
@@ -86,6 +86,7 @@ class Task(db.Model):
     completed = db.Column(db.Boolean, default=False)
     created_at = db.Column(db.DateTime, default=db.func.current_timestamp())
     priority = db.Column(db.String(20), default='Média')
+    due_date = db.Column(db.Date, nullable=True)
 
     #Chave estrangeira, garante que toda tarefa tem um usuário
     user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
@@ -191,9 +192,8 @@ def login():
 @app.route('/dashboard')
 @login_required
 def dashboard():
-    """ Busca as tarefas filtrando pelo user_id do usuário logado"""
     tasks = Task.query.filter_by(user_id=current_user.id).order_by(Task.created_at.desc()).all()
-    return render_template('dashboard.html', tasks=tasks)
+    return render_template('dashboard.html', tasks=tasks, today=date.today())
 
 #Cria novas tarefas para o usuário logado
 @app.route('/task/new', methods=['GET', 'POST'])
@@ -203,12 +203,14 @@ def new_task():
         title = request.form.get('title')
         description = request.form.get('description')
         priority = request.form.get('priority')
+        due_date_str = request.form.get('due_date')
+        due_date = datetime.strptime(due_date_str, '%Y-%m-%d').date() if due_date_str else None
 
         if not title:
             flash('O título é obrigatório', 'danger')
             return redirect(url_for('new_task'))
 
-        task = Task(title=title, description=description, priority=priority, user_id=current_user.id)
+        task = Task(title=title, description=description, priority=priority, due_date=due_date, user_id=current_user.id)
         db.session.add(task)
         db.session.commit()
 
@@ -233,6 +235,8 @@ def edit_task(task_id):
         task.description = request.form.get('description')
         task.priority = request.form.get('priority')
         task.completed = True if request.form.get('completed') else False
+        due_date_str = request.form.get('due_date')
+        task.due_date = datetime.strptime(due_date_str, '%Y-%m-%d').date() if due_date_str else None
 
         db.session.commit()
         flash('Tarefa atualizada', 'success')
