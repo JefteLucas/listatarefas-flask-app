@@ -271,6 +271,21 @@ def logout():
     flash('Você saiu', 'info')
     return redirect (url_for('login'))
 
+
+@app.errorhandler(404)
+def not_found(e):
+    return render_template('404.html'), 404
+
+@app.errorhandler(403)
+def forbidden(e):
+    return render_template('403.html'), 403
+
+@app.errorhandler(500)
+def internal_error(e):
+    db.session.rollback()
+    return render_template('500.html'), 500
+
+
 # Execução da aplicação em desenvolvimento
 if __name__ == '__main__':
-    app.run(debug=os.environ.get('FLASK_DEGUB', 'False') == 'True') # recarrega a página automaticamente em caso de erro 404
+    app.run(debug=os.environ.get('FLASK_DEGUB', 'False') == 'True') # recarrega a página automaticamente em caso de erro    
