@@ -154,6 +154,10 @@ def register():
             flash('Este email já está cadastrado', 'danger')
             return redirect(url_for('register'))
 
+        if len(password) < 6:
+            flash('A senha deve ter no mínimo 6 caracteres', 'danger')
+            return redirect(url_for('register'))
+
         # Cria novo usuário
         new_user = User(email=email, name=name)
         new_user.set_password(password)
@@ -200,7 +204,7 @@ def dashboard():
 @login_required
 def new_task():
     if request.method == 'POST':
-        title = request.form.get('title')
+        title = request.form.get('title', '').strip()
         description = request.form.get('description')
         priority = request.form.get('priority')
         due_date_str = request.form.get('due_date')
@@ -231,7 +235,7 @@ def edit_task(task_id):
         return redirect(url_for('dashboard'))
 
     if request.method == 'POST':
-        task.title = request.form.get('title')
+        task.title = request.form.get('title', '').strip()
         task.description = request.form.get('description')
         task.priority = request.form.get('priority')
         task.completed = True if request.form.get('completed') else False
@@ -269,4 +273,4 @@ def logout():
 
 # Execução da aplicação em desenvolvimento
 if __name__ == '__main__':
-    app.run(debug=True) # recarrega a página automaticamente em caso de erro 404
+    app.run(debug=os.environ.get('FLASK_DEGUB', 'False') == 'True') # recarrega a página automaticamente em caso de erro 404
