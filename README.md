@@ -117,4 +117,4 @@ python app.py
 
 Projeto desenvolvido por Jefté Lucas como parte do portfólio de estudos em desenvolvimento de sistemas.
 
-Sinta-se à vontade para sugerir melhorias ou apontar problemas — este projeto está em constante evolução enquanto aprendo. 🚀
+Sinta-se à vontade para sugerir melhorias ou apontar problemas, este projeto está em constante evolução enquanto aprendo. 🚀
