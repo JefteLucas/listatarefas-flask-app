@@ -100,10 +100,6 @@ echo SECRET_KEY=sua_chave_gerada_aqui > .env
 python app.py
 ```
 
-Acesse `http://localhost:5000` no navegador. Um usuário administrador de teste é criado automaticamente na primeira execução (e-mail: `admin@email.com`).
-
-> ⚠️ A senha padrão do usuário administrador é apenas um seed de desenvolvimento — recomendado trocar antes de qualquer uso além de testes locais.
-
 ## 📁 Estrutura do projeto
 
 ```
@@ -118,14 +114,7 @@ Acesse `http://localhost:5000` no navegador. Um usuário administrador de teste 
 └── .env                    # Variáveis de ambiente (não versionado)
 ```
 
-## 📷 Capturas de tela
 
-*(adicionar prints do dashboard, login e formulário de tarefas aqui)*
-
----
-
-## 🙋 Autor
-
-Projeto desenvolvido por **[seu nome]** como parte do portfólio de estudos em desenvolvimento de sistemas.
+Projeto desenvolvido por Jefté Lucas como parte do portfólio de estudos em desenvolvimento de sistemas.
 
 Sinta-se à vontade para sugerir melhorias ou apontar problemas — este projeto está em constante evolução enquanto aprendo. 🚀
