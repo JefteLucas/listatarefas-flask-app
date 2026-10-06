@@ -5,7 +5,7 @@
 ![SQLAlchemy](https://img.shields.io/badge/SQLAlchemy-2.0-red)
 ![Status](https://img.shields.io/badge/status-em%20desenvolvimento-yellow)
 
-Aplicação web de lista de tarefas (to-do list) com autenticação de usuários, construída com **Flask** e **SQLAlchemy**. Cada usuário tem sua própria lista de tarefas, protegida por login — pensado para organizar pendências do dia a dia (trabalho, estudos, afazeres pessoais) com prioridade, status de conclusão e data de vencimento.
+Aplicação web de lista de tarefas (to-do list) com autenticação de usuários, construída com **Flask** e **SQLAlchemy**. Cada usuário tem sua própria lista de tarefas, protegida por login, pensado para organizar pendências do dia a dia (trabalho, estudos, afazeres pessoais) com prioridade, status de conclusão e data de vencimento.
 
 > 🎓 **Projeto estudantil.** Este projeto foi construído com o objetivo principal de **aprender na prática** conceitos de desenvolvimento web back-end: autenticação, segurança (CSRF, hashing de senha, variáveis de ambiente), modelagem de banco de dados e versionamento de schema. Não é (ainda) um produto em produção, mas sim um laboratório de estudo que evolui continuamente, com cada decisão técnica documentada e justificada ao longo do caminho.
 
