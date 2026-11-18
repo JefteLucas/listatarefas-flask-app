@@ -32,14 +32,29 @@ from datetime import timedelta, datetime, date
 
 load_dotenv()
 
+IS_PRODUCTION = os.environ.get('APP_ENV') == 'production'
 
 app = Flask(__name__)
 
-app.config['SECRET_KEY'] = os.environ.get('SECRET_KEY', 'dev-fallback-key')
+secret_key = os.environ.get('SECRET_KEY')
+if not secret_key:
+    if IS_PRODUCTION:
+        raise RuntimeError('SECRET_KEY não definida em produção')
+    secret_key = 'dev-fallback-key'
 
+app.config['SECRET_KEY'] = secret_key
 app.config['REMEMBER_COOKIE_DURATION'] = timedelta(days=14)
 
-# Defesa contra ataque CSRF
+app.config['SESSION_COOKIE_HTTPONLY'] = True
+app.config['SESSION_COOKIE_SAMESITE'] = 'Lax'
+app.config['REMEMBER_COOKIE_HTTPONLY'] = True
+app.config['REMEMBER_COOKIE_SAMESITE'] = 'Lax'
+
+if IS_PRODUCTION:
+    app.config['SESSION_COOKIE_SECURE'] = True
+    app.config['REMEMBER_COOKIE_SECURE'] = True
+
+
 csrf = CSRFProtect(app)
 
 app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///meu_banco.db'
@@ -87,20 +102,48 @@ class Task(db.Model):
 
 login_manager = LoginManager()
 login_manager.init_app(app)
-
-
+login_manager.login_view = 'login'
 login_manager.login_message = 'Por favor, faça login para acessar esta página.'
 
-# Função obrigatória do flask-login, recebe o id do user e armazena na sessão retornando o objeto user
+
 @login_manager.user_loader
 def load_user(user_id):
     return db.session.get(User, int(user_id))
 
+PRIORITIES = ('Baixa', 'Média', 'Alta')
+
+def get_task_form_data():
+    title = (request.form.get('title') or '').strip()
+    description = (request.form.get('description') or '').strip()
+    priority = request.form.get('priority')
+    if priority not in PRIORITIES:
+        priority = 'Média'
+    return title, description or None, priority
+
+def validate_title(title):
+    if not title:
+        return 'O título é obrigatório'
+    if len(title) > 200:
+        return 'O título deve ter no máximo 200 caracteres'
+    return None
+
+def parse_due_date(value):
+    if not value:
+        return None
+    try:
+        return datetime.strptime(value, '%Y-%m-%d').date()
+    except ValueError:
+        return None
 
 with app.app_context():
-    if not User.query.filter_by(email='admin@email.com').first():
-        admin = User(email='admin@email.com', name= 'Administrador')
-        admin.set_password('admin123')
+    db.create_all()
+
+    admin_email = os.environ.get('ADMIN_EMAIL', 'admin@email.com').strip().lower()
+    admin_password = os.environ.get('ADMIN_PASSWORD')
+
+    if admin_password and not User.query.filter_by(email=admin_email).first():
+        admin = User(email=admin_email, name='Administrador')
+        admin.set_password(admin_password)
         db.session.add(admin)
         db.session.commit()
 
@@ -112,38 +155,41 @@ def index():
 @app.route('/register', methods=['GET', 'POST'])
 def register():
     if request.method == 'POST':
-        name = request.form.get('name')
-        email = request.form.get('email').lower().strip()
-        password = request.form.get('password')
-        confirm = request.form.get('confirm_password')
+        name = (request.form.get('name') or '').strip()
+        email = (request.form.get('email') or '').strip().lower()
+        password = request.form.get('password') or ''
+        confirm = request.form.get('confirm_password') or ''
 
-        # Validações de campos obrigatórios
         if not email or not password:
             flash('Preencha todos os campos obrigatórios', 'danger')
             return redirect(url_for('register'))
 
-        # Validação de confirmação de senha
-        if password != confirm:
-            flash('As senhas não são iguais', 'danger')
-            return redirect(url_for('register'))
-
-        # Validação de email único
-        if User.query.filter_by(email=email).first():
-            flash('Este email já está cadastrado', 'danger')
+        if len(email) > 120 or len(name) > 100:
+            flash('Nome ou e-mail excedem o tamanho máximo permitido', 'danger')
             return redirect(url_for('register'))
 
         if len(password) < 6:
             flash('A senha deve ter no mínimo 6 caracteres', 'danger')
             return redirect(url_for('register'))
+        
+        if password != confirm:
+            flash('As senhas não são iguais', 'danger')
+            return redirect(url_for('register'))
 
-        # Cria novo usuário
-        new_user = User(email=email, name=name)
+        if User.query.filter_by(email=email).first():
+            flash('Este email já está cadastrado', 'danger')
+            return redirect(url_for('register'))
+
+
+        new_user = User(email=email, name=name or None)
         new_user.set_password(password)
         db.session.add(new_user)
         db.session.commit()
 
+
         flash('Conta criada com sucesso! Faça login', 'success')
         return redirect(url_for('login'))
+
 
     return render_template('register.html')
 
@@ -174,30 +220,26 @@ def dashboard():
     tasks = Task.query.filter_by(user_id=current_user.id).order_by(Task.created_at.desc()).all()
     return render_template('dashboard.html', tasks=tasks, today=date.today())
 
-
 @app.route('/task/new', methods=['GET', 'POST'])
 @login_required
 def new_task():
     if request.method == 'POST':
-        title = request.form.get('title', '').strip()
-        description = request.form.get('description')
-        priority = request.form.get('priority')
-        due_date_str = request.form.get('due_date')
-        due_date = datetime.strptime(due_date_str, '%Y-%m-%d').date() if due_date_str else None
+        title, description, priority = get_task_form_data()
 
-        if not title:
-            flash('O título é obrigatório', 'danger')
+        error = validate_title(title)
+        if error:
+            flash(error, 'danger')
             return redirect(url_for('new_task'))
 
-        task = Task(title=title, description=description, priority=priority, due_date=due_date, user_id=current_user.id)
+        task = Task(title=title, description=description,
+                    priority=priority, due_date=parse_due_date(request.form.get('due_date')) ,user_id=current_user.id)
         db.session.add(task)
         db.session.commit()
 
         flash('Tarefa criada com sucesso!', 'success')
         return redirect(url_for('dashboard'))
 
-    return render_template('task_form.html', task=None) 
-
+    return render_template('task_form.html', task=None)
 
 @app.route('/task/edit/<int:task_id>', methods=['GET', 'POST'])
 @login_required
@@ -210,17 +252,23 @@ def edit_task(task_id):
         return redirect(url_for('dashboard'))
 
     if request.method == 'POST':
-        task.title = request.form.get('title', '').strip()
-        task.description = request.form.get('description')
-        task.priority = request.form.get('priority')
-        task.completed = True if request.form.get('completed') else False
-        due_date_str = request.form.get('due_date')
-        task.due_date = datetime.strptime(due_date_str, '%Y-%m-%d').date() if due_date_str else None
+        title, description, priority = get_task_form_data()
+
+        error = validate_title(title)
+        if error:
+            flash(error, 'danger')
+            return redirect(url_for('edit_task', task_id=task.id))
+
+        task.title = title
+        task.description = description
+        task.priority = priority
+        task.due_date = parse_due_date(request.form.get('due_date'))
+        task.completed = bool(request.form.get('completed'))
 
         db.session.commit()
         flash('Tarefa atualizada', 'success')
         return redirect(url_for('dashboard'))
-
+    
     return render_template('task_form.html', task=task)
 
 
@@ -240,7 +288,7 @@ def delete_task(task_id):
     return redirect(url_for('dashboard'))
 
 
-@app.route('/logout')
+@app.route('/logout', methods=['POST'])
 @login_required
 def logout():
     logout_user()
@@ -263,4 +311,4 @@ def internal_error(e):
 
 
 if __name__ == '__main__':
-    app.run(debug=os.environ.get('FLASK_DEGUB', 'False') == 'True') # recarrega a página automaticamente em caso de erro    
+    app.run(debug=os.environ.get('FLASK_DEBUG', '0') == '1')

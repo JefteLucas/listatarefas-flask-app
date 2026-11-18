@@ -12,7 +12,10 @@
             <h1>Tarefas</h1>
             <div>
                 <span class="me-3">Olá, {{ current_user.name or current_user.email }}</span>
-                <a href="{{ url_for('logout') }}" class="btn btn-sm btn-outline-danger">Sair</a>
+                <form method="POST" action="{{ url_for('logout') }}" class="d-inline">
+                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                    <button type="submit" class="btn btn-sm btn-outline-danger">Sair</button>
+                </form>
             </div>
         </div>
 
