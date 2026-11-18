@@ -28,10 +28,8 @@
         {% endwith %}
 
 
-        <!--Adicionar nova tarefa -->
         <a href="{{ url_for('new_task') }}" class="btn btn-primary mb-3"> ➕ Nova Tarefa</a>
 
-        <!-- Lista de Tarefas -->
         {% if tasks %}
             <div class="list-group">
                 {% for task in tasks %}
@@ -80,7 +78,6 @@
                 {% endfor %}
             </div>
         {% else %}
-            <!-- Exibido quando não há tarefas cadastradas -->
             <div class="alert alert-info text-center py-4">
                 <h5> Nenhuma tarefa cadastrada</h5>
                 <p class="mb-0">Clique em "Nova Tarefa" para começar!</p>

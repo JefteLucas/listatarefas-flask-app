@@ -29,13 +29,12 @@ from flask_wtf import CSRFProtect
 from flask_migrate import Migrate
 from datetime import timedelta, datetime, date
 
-# carregando o dotenv
+
 load_dotenv()
 
-# Configuração do app
+
 app = Flask(__name__)
 
-# Chave secreta
 app.config['SECRET_KEY'] = os.environ.get('SECRET_KEY', 'dev-fallback-key')
 
 app.config['REMEMBER_COOKIE_DURATION'] = timedelta(days=14)
@@ -43,28 +42,17 @@ app.config['REMEMBER_COOKIE_DURATION'] = timedelta(days=14)
 # Defesa contra ataque CSRF
 csrf = CSRFProtect(app)
 
-# ====== Configuração do banco de dados =======
-
-# Cria um arquivo .db na raiz do projeto
 app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///meu_banco.db'
 
-# Desativa rastreamento de modificações, melhora a perfomance e elimina warnings
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 
-# Recarrega templates automaticamente sem reiniciar o servidor
 app.config['TEMPLATES_AUTO_RELOAD'] = True
 
-# Inicialização do banco de dados
-#Cria a instância do SQLAlchemy vinculada ao app flask
 db = SQLAlchemy(app)
 migrate = Migrate(app, db)
 
 
-# ==== Modelos de dados (Tabelas do banco) =====
-
-# Estrutura do banco de dados que recebe dados do usuário cadastrado
-# Modelo que representa um usuário do sistema
-class User(db.Model, UserMixin): # db.model(mapeamento sql) e User Mixin(método do flask-login)
+class User(db.Model, UserMixin):
     id = db.Column(db.Integer, primary_key=True)
     email = db.Column(db.String(120), unique=True, nullable=False)
     password_hash = db.Column(db.String(200), nullable=False)
@@ -78,7 +66,6 @@ class User(db.Model, UserMixin): # db.model(mapeamento sql) e User Mixin(método
     def check_password(self, senha):
         return check_password_hash(self.password_hash, senha)
 
-# Tabela de tarefas
 class Task(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     title = db.Column(db.String(200), nullable=False)
@@ -97,14 +84,11 @@ class Task(db.Model):
     def __repr__(self):
         return f'<Task {self.title}>'
 
-# Configurações do flask-login (Gerenciamento de sessão)
+
 login_manager = LoginManager()
 login_manager.init_app(app)
 
-# Define a rota para onde o usuário será redirecionado quando tentar acessar uma página sem estar logado
-login_manager.login_view = 'login'
 
-# Exibe a mensagem ao redirecionar para a página de login
 login_manager.login_message = 'Por favor, faça login para acessar esta página.'
 
 # Função obrigatória do flask-login, recebe o id do user e armazena na sessão retornando o objeto user
@@ -113,9 +97,6 @@ def load_user(user_id):
     return db.session.get(User, int(user_id))
 
 
-# ======== Criação das tabelas e do usuário admin =========
-
-#Cria usuário admin
 with app.app_context():
     if not User.query.filter_by(email='admin@email.com').first():
         admin = User(email='admin@email.com', name= 'Administrador')
@@ -123,14 +104,11 @@ with app.app_context():
         db.session.add(admin)
         db.session.commit()
 
-# ====== Rotas públicas, acesso generalizado =======
 
-# Rota para o index - Página inicial exibe o form de login
 @app.route('/')
 def index():
     return render_template('index.html')
 
-# Registro de novos usuários - Página de cadastro
 @app.route('/register', methods=['GET', 'POST'])
 def register():
     if request.method == 'POST':
@@ -169,7 +147,7 @@ def register():
 
     return render_template('register.html')
 
-# Rota de login - Página de login 
+
 @app.route('/login', methods=['GET', 'POST'])
 def login():
     if request.method == 'POST':
@@ -190,16 +168,13 @@ def login():
     return render_template('index.html')
 
 
-# ====== Rotas protegidas (Exigem autenticação com @login_required ======)
-
-# Painel pricipal do usuário
 @app.route('/dashboard')
 @login_required
 def dashboard():
     tasks = Task.query.filter_by(user_id=current_user.id).order_by(Task.created_at.desc()).all()
     return render_template('dashboard.html', tasks=tasks, today=date.today())
 
-#Cria novas tarefas para o usuário logado
+
 @app.route('/task/new', methods=['GET', 'POST'])
 @login_required
 def new_task():
@@ -223,7 +198,7 @@ def new_task():
 
     return render_template('task_form.html', task=None) 
 
-# Edita tarefas existente
+
 @app.route('/task/edit/<int:task_id>', methods=['GET', 'POST'])
 @login_required
 def edit_task(task_id):
@@ -248,7 +223,7 @@ def edit_task(task_id):
 
     return render_template('task_form.html', task=task)
 
-# Remove uma tarefa do banco de dados
+
 @app.route('/task/delete/<int:task_id>', methods=['POST'])
 @login_required
 def delete_task(task_id):
@@ -264,10 +239,11 @@ def delete_task(task_id):
     flash('Tarefa removida', 'success')
     return redirect(url_for('dashboard'))
 
-# Redireciona para página de login quando o logout é feito por usuário logado
+
 @app.route('/logout')
 @login_required
 def logout():
+    logout_user()
     flash('Você saiu', 'info')
     return redirect (url_for('login'))
 
@@ -286,6 +262,5 @@ def internal_error(e):
     return render_template('500.html'), 500
 
 
-# Execução da aplicação em desenvolvimento
 if __name__ == '__main__':
     app.run(debug=os.environ.get('FLASK_DEGUB', 'False') == 'True') # recarrega a página automaticamente em caso de erro    

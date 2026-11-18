@@ -28,7 +28,6 @@
             {% endif %}
         {% endwith %}
         
-        <!-- Formulário -->
         <form method="POST">
             <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
             <!-- Campo Título -->
@@ -38,13 +37,11 @@
                     value="{{ task.title if task else '' }}" required>
             </div>
 
-            <!-- Campo Descrição -->
             <div class="mb-3">
                 <label for="description" class="form-label fw-semibold">Descrição</label>
                 <textarea class="form-control" id="description" name="description" rows="3">{{ task.description if task else '' }}</textarea>
             </div>
             
-            <!-- Campo Prioridade -->
             <div class="mb-3">
                 <label for="priority" class="form-label fw-semibold">Prioridade</label>
                 <select class="form-select" name="priority" id="priority">
@@ -60,7 +57,6 @@
                     value="{{ task.due_date.strftime('%Y-%m-%d') if task and task.due_date else '' }}">
             </div>
 
-            <!-- Checkbox -->
             {% if task %}
                 <div class="mb-3 form-check">
                     <input type="checkbox" class="form-check-input" id="completed" name="completed"
@@ -69,7 +65,6 @@
                 </div>
             {% endif %}
 
-            <!-- Botões salvar e cancelar -->
             <div class="d-flex gap-2">
                 <button type="submit" class="btn btn-primary"> Salvar</button>
                 <a href="{{ url_for('dashboard') }}" class="btn btn-secondary">Cancelar</a>
